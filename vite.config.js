@@ -14,5 +14,5 @@ export default defineConfig({
   define: {
     __VUE_PROD_DEVTOOLS__: false
   },
-  base: '/vue-demo/',  // 重要：改为新的仓库名
+  base: process.env.NODE_ENV === 'production' ? '/vue-demo/' : '/',
 })

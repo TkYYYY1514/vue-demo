@@ -8,20 +8,11 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/books',
-    name: 'books',
-    component: () => import('../views/BooksView.vue')
-  },
-  {
-    path: '/borrow',
-    name: 'borrow',
-    component: () => import('../views/BorrowView.vue')
-  },
-  {
-    path: '/statistics', 
-    name: 'statistics',
-    component: () => import('../views/StatisticsView.vue')
+    path: '/favorites',
+    name: 'favorites', 
+    component: () => import('../views/FavoritesView.vue')
   }
+  // 删除其他不存在的路由
 ]
 
 const router = createRouter({

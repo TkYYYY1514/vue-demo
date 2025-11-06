@@ -18,14 +18,14 @@ const routes = [
     component: () => import('../views/BorrowView.vue')
   },
   {
-    path: '/statistics',
+    path: '/statistics', 
     name: 'statistics',
     component: () => import('../views/StatisticsView.vue')
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 

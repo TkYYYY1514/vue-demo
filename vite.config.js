@@ -1,11 +1,18 @@
-import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
-  base: process.env.NODE_ENV === 'production' ? '/vue-po/' : '/', 
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          dev: false
+        }
+      }
+    })
+  ],
+  define: {
+    __VUE_PROD_DEVTOOLS__: false
+  },
+  base: '/vue-demo/',  // 重要：改为新的仓库名
 })

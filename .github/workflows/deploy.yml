@@ -15,37 +15,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'  # 改为 Node.js 20
         cache: 'npm'
-    
-    - name: Debug - Show directory structure
-      run: |
-        echo "=== 目录结构 ==="
-        ls -la
-        echo "=== src 目录 ==="
-        ls -la src/
-        echo "=== views 目录 ==="
-        ls -la src/views/
-        echo "=== Node.js 版本 ==="
-        node --version
-        echo "=== NPM 版本 ==="
-        npm --version
     
     - name: Install dependencies
       run: npm install
     
     - name: Build project
-      run: |
-        echo "=== 开始构建 ==="
-        npm run build
-        echo "=== 构建完成 ==="
-        ls -la dist/
+      run: npm run build
     
     - name: Setup Pages
       uses: actions/configure-pages@v4

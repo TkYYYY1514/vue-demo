@@ -1,85 +1,135 @@
 <template>
-  <div class="notes-home">
-    <div class="page-header">
-      <h1>所有笔记</h1>
-      <p>共 {{ filteredNotes.length }} 条笔记</p>
+  <div class="terminal-interface">
+    <!-- 终端头部 -->
+    <div class="terminal-header">
+      <div class="header-left">
+        <div class="status-light"></div>
+        <h1 class="terminal-title">数据档案库</h1>
+      </div>
+      <div class="header-right">
+        <span class="system-time">{{ currentTime }}</span>
+        <span class="record-count">记录: {{ filteredNotes.length }}</span>
+      </div>
     </div>
 
-    <div class="search-bar">
+    <!-- 命令输入区 -->
+    <div class="command-bar">
+      <div class="prompt">></div>
       <input 
         v-model="searchQuery"
         type="text" 
-        placeholder="搜索笔记..."
-        class="search-input"
+        placeholder="输入检索关键词..."
+        class="command-input"
+        @keyup.enter="executeSearch"
       >
+      <button class="execute-btn" @click="executeSearch">执行</button>
     </div>
 
-    <div class="notes-grid">
+    <!-- 数据网格 -->
+    <div class="data-grid">
       <div 
         v-for="note in filteredNotes" 
         :key="note.id"
-        class="note-card"
+        class="data-card"
         @click="editNote(note)"
       >
-        <div class="note-header">
-          <h3>{{ note.title }}</h3>
-          <div class="note-actions">
+        <div class="card-header">
+          <h3 class="data-title">{{ note.title }}</h3>
+          <div class="card-actions">
             <button 
               @click.stop="toggleFavorite(note.id)"
-              class="favorite-btn"
+              class="action-btn favorite"
               :class="{ active: note.favorite }"
+              title="标记核心"
             >
-              {{ note.favorite ? '★' : '☆' }}
+              <span class="btn-icon">{{ note.favorite ? '🔰' : '⚙️' }}</span>
             </button>
             <button 
-              @click.stop="deleteNote(note.id)"
-              class="delete-btn"
+              @click.stop="showDeleteConfirm(note)"
+              class="action-btn delete"
+              title="删除记录"
             >
-              删除
+              <span class="btn-icon">🗑️</span>
             </button>
           </div>
         </div>
-        <div class="note-content">
-          {{ note.content.substring(0, 100) }}{{ note.content.length > 100 ? '...' : '' }}
+        <div class="data-preview">
+          {{ note.content.substring(0, 120) }}{{ note.content.length > 120 ? '...' : '' }}
         </div>
-        <div class="note-footer">
-          <span class="note-date">
-            {{ formatDate(note.updatedAt) }}
+        <div class="card-footer">
+          <span class="timestamp">
+            更新: {{ formatDate(note.updatedAt) }}
           </span>
+          <span class="data-id">ID: {{ note.id }}</span>
         </div>
+        <div class="card-glow"></div>
       </div>
       
-      <div v-if="filteredNotes.length === 0" class="empty-state">
-        <p>暂无笔记</p>
-        <button @click="$emit('createNewNote')" class="btn-primary">
-          创建第一条笔记
+      <!-- 空状态 -->
+      <div v-if="filteredNotes.length === 0" class="empty-terminal">
+        <div class="empty-icon">📡</div>
+        <h3>未检索到数据</h3>
+        <p>数据库为空或检索条件不匹配</p>
+        <button @click="$emit('createNewNote')" class="terminal-btn">
+          创建新记录
         </button>
       </div>
     </div>
 
-    <!-- 笔记编辑器模态框 -->
-    <div v-if="editingNote" class="modal-overlay" @click="closeEditor">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>编辑笔记</h2>
-          <button @click="closeEditor" class="close-btn">×</button>
+    <!-- 数据编辑器 -->
+    <div v-if="editingNote" class="editor-overlay" @click="closeEditor">
+      <div class="editor-terminal" @click.stop>
+        <div class="editor-header">
+          <div class="editor-title">数据编辑器</div>
+          <button @click="closeEditor" class="close-terminal">⨯</button>
         </div>
-        <div class="modal-body">
-          <input 
-            v-model="editingNote.title"
-            type="text" 
-            placeholder="笔记标题"
-            class="title-input"
-          >
-          <textarea 
-            v-model="editingNote.content"
-            placeholder="开始写作..."
-            class="content-textarea"
-          ></textarea>
+        <div class="editor-body">
+          <div class="input-group">
+            <label class="input-label">记录标题</label>
+            <input 
+              v-model="editingNote.title"
+              type="text" 
+              placeholder="输入记录标题..."
+              class="terminal-input"
+            >
+          </div>
+          <div class="input-group">
+            <label class="input-label">数据内容</label>
+            <textarea 
+              v-model="editingNote.content"
+              placeholder="输入数据内容..."
+              class="terminal-textarea"
+            ></textarea>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button @click="saveNote" class="btn-primary">保存</button>
-          <button @click="closeEditor" class="btn-secondary">取消</button>
+        <div class="editor-footer">
+          <button @click="saveNote" class="terminal-btn primary">保存数据</button>
+          <button @click="closeEditor" class="terminal-btn secondary">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteModal" class="editor-overlay" @click="hideDeleteConfirm">
+      <div class="confirm-terminal" @click.stop>
+        <div class="confirm-header warning">
+          <div class="confirm-icon">⚠️</div>
+          <div class="confirm-title">确认删除</div>
+          <button @click="hideDeleteConfirm" class="close-terminal">⨯</button>
+        </div>
+        <div class="confirm-body">
+          <div class="warning-message">
+            <h3>即将删除数据记录</h3>
+            <p class="record-info">"{{ noteToDelete?.title }}"</p>
+            <p class="warning-text">此操作不可恢复，请确认是否继续？</p>
+          </div>
+          <div class="data-preview" v-if="noteToDelete">
+            {{ noteToDelete.content.substring(0, 100) }}{{ noteToDelete.content.length > 100 ? '...' : '' }}
+          </div>
+        </div>
+        <div class="confirm-footer">
+          <button @click="confirmDelete" class="terminal-btn danger">确认删除</button>
+          <button @click="hideDeleteConfirm" class="terminal-btn secondary">取消</button>
         </div>
       </div>
     </div>
@@ -98,7 +148,10 @@ export default {
   data() {
     return {
       searchQuery: '',
-      editingNote: null
+      editingNote: null,
+      currentTime: this.getCurrentTime(),
+      showDeleteModal: false,
+      noteToDelete: null
     }
   },
   computed: {
@@ -113,7 +166,24 @@ export default {
       )
     }
   },
+  mounted() {
+    // 更新时间
+    this.timeInterval = setInterval(() => {
+      this.currentTime = this.getCurrentTime()
+    }, 1000)
+  },
+  beforeUnmount() {
+    clearInterval(this.timeInterval)
+  },
   methods: {
+    getCurrentTime() {
+      return new Date().toLocaleTimeString('zh-CN', { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    },
     editNote(note) {
       this.editingNote = { ...note }
     },
@@ -126,9 +196,21 @@ export default {
         this.closeEditor()
       }
     },
-    deleteNote(noteId) {
-      if (confirm('确定要删除这条笔记吗？')) {
-        this.$emit('delete-note', noteId)
+    // 显示删除确认弹窗
+    showDeleteConfirm(note) {
+      this.noteToDelete = note
+      this.showDeleteModal = true
+    },
+    // 隐藏删除确认弹窗
+    hideDeleteConfirm() {
+      this.showDeleteModal = false
+      this.noteToDelete = null
+    },
+    // 确认删除
+    confirmDelete() {
+      if (this.noteToDelete) {
+        this.$emit('delete-note', this.noteToDelete.id)
+        this.hideDeleteConfirm()
       }
     },
     toggleFavorite(noteId) {
@@ -142,272 +224,567 @@ export default {
     },
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString('zh-CN')
+    },
+    executeSearch() {
+      // 搜索执行效果
+      console.log('执行检索:', this.searchQuery)
     }
   }
 }
 </script>
 
+
 <style scoped>
-.notes-home {
-  max-width: 1200px;
+.terminal-interface {
+  max-width: 1400px;
   margin: 0 auto;
+  font-family: 'Courier New', 'SF Mono', Monaco, monospace;
 }
 
-.page-header {
+/* 终端头部 */
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+  border: 1px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
-.page-header h1 {
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.page-header p {
-  color: #6c757d;
+.status-light {
+  width: 12px;
+  height: 12px;
+  background: #666;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #666;
+  animation: blink 2s infinite;
 }
 
-.search-bar {
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+.terminal-title {
+  color: #e0e0e0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-shadow: none;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+}
+
+.system-time, .record-count {
+  background: rgba(80, 80, 80, 0.3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 2px;
+  border: 1px solid #444;
+}
+
+/* 命令输入区 */
+.command-bar {
+  display: flex;
+  align-items: center;
   margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(50, 50, 50, 0.3);
+  border: 1px solid #333;
+  border-radius: 4px;
 }
 
-.search-input {
-  width: 100%;
-  max-width: 400px;
-  padding: 0.75rem 1rem;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+.prompt {
+  color: #e0e0e0;
+  font-weight: bold;
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
   font-size: 1rem;
-}
-
-.search-input:focus {
+  padding: 0.5rem;
   outline: none;
-  border-color: #1976d2;
 }
 
-.notes-grid {
+.command-input::placeholder {
+  color: rgba(200, 200, 200, 0.5);
+}
+
+.execute-btn {
+  background: #444;
+  color: #e0e0e0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.execute-btn:hover {
+  background: #555;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* 数据网格 */
+.data-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 
-.note-card {
-  background: white;
-  border-radius: 8px;
+.data-card {
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+  border: 1px solid #333;
+  border-radius: 4px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
 
-.note-card:hover {
+.data-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(100, 100, 100, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.data-card:hover::before {
+  left: 100%;
+}
+
+.data-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  border-color: #1976d2;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+  border-color: #444;
 }
 
-.note-header {
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
 }
 
-.note-header h3 {
-  color: #2c3e50;
+.data-title {
+  color: #e0e0e0;
   margin: 0;
   flex: 1;
   margin-right: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.note-actions {
+.card-actions {
   display: flex;
   gap: 0.5rem;
 }
 
-.favorite-btn, .delete-btn {
-  background: none;
-  border: none;
+.action-btn {
+  background: rgba(80, 80, 80, 0.3);
+  border: 1px solid #555;
+  color: #e0e0e0;
+  padding: 0.4rem;
+  border-radius: 2px;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: rgba(100, 100, 100, 0.4);
+  transform: scale(1.1);
+}
+
+.action-btn.favorite.active {
+  background: rgba(120, 120, 120, 0.5);
+  box-shadow: 0 0 8px rgba(150, 150, 150, 0.5);
+}
+
+.action-btn.delete:hover {
+  background: rgba(120, 80, 80, 0.4);
+  border-color: #844;
+}
+
+.btn-icon {
   font-size: 0.9rem;
 }
 
-.favorite-btn {
-  color: #ffc107;
-}
-
-.favorite-btn.active {
-  color: #ff9800;
-}
-
-.delete-btn {
-  color: #dc3545;
-}
-
-.favorite-btn:hover, .delete-btn:hover {
-  background: #f8f9fa;
-}
-
-.note-content {
-  color: #495057;
+.data-preview {
+  color: rgba(200, 200, 200, 0.8);
   line-height: 1.5;
   margin-bottom: 1rem;
   white-space: pre-line;
+  font-size: 0.9rem;
 }
 
-.note-footer {
-  border-top: 1px solid #e9ecef;
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(100, 100, 100, 0.3);
   padding-top: 0.75rem;
+  font-size: 0.8rem;
 }
 
-.note-date {
-  color: #6c757d;
-  font-size: 0.85rem;
+.timestamp {
+  color: rgba(180, 180, 180, 0.7);
 }
 
-.empty-state {
+.data-id {
+  color: rgba(150, 150, 150, 0.5);
+  font-family: 'Courier New', monospace;
+}
+
+.card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #666;
+  box-shadow: 0 0 6px #666;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.data-card:hover .card-glow {
+  opacity: 1;
+}
+
+/* 空状态 */
+.empty-terminal {
   text-align: center;
-  padding: 3rem;
-  color: #6c757d;
+  padding: 4rem 2rem;
+  color: rgba(180, 180, 180, 0.7);
+  grid-column: 1 / -1;
 }
 
-.empty-state p {
+.empty-icon {
+  font-size: 4rem;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  opacity: 0.7;
 }
 
-/* 模态框样式 */
-.modal-overlay {
+.empty-terminal h3 {
+  margin-bottom: 1rem;
+  color: #e0e0e0;
+}
+
+.empty-terminal p {
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* 终端按钮 */
+.terminal-btn {
+  background: #444;
+  color: #e0e0e0;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.terminal-btn:hover {
+  background: #555;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-btn.secondary {
+  background: transparent;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+.terminal-btn.secondary:hover {
+  background: rgba(80, 80, 80, 0.3);
+}
+
+/* 编辑器样式 */
+.editor-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 8px;
+.editor-terminal {
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+  border: 2px solid #333;
+  border-radius: 4px;
   width: 90%;
-  max-width: 600px;
+  max-width: 700px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
 }
 
-.modal-header {
+.editor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #333;
+  background: rgba(50, 50, 50, 0.3);
 }
 
-.modal-header h2 {
-  margin: 0;
-  color: #2c3e50;
+.editor-title {
+  color: #e0e0e0;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.close-btn {
+.close-terminal {
   background: none;
   border: none;
+  color: #e0e0e0;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #6c757d;
+  padding: 0.25rem;
+  border-radius: 2px;
 }
 
-.modal-body {
+.close-terminal:hover {
+  background: rgba(120, 80, 80, 0.3);
+}
+
+.editor-body {
   flex: 1;
   padding: 1.5rem;
   overflow-y: auto;
 }
 
-.title-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+.input-group {
+  margin-bottom: 1.5rem;
 }
 
-.content-textarea {
+.input-label {
+  display: block;
+  color: #e0e0e0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.terminal-input, .terminal-textarea {
   width: 100%;
-  height: 300px;
+  background: rgba(50, 50, 50, 0.3);
+  border: 1px solid #444;
+  color: #e0e0e0;
   padding: 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
+  border-radius: 2px;
+  font-family: 'Courier New', monospace;
   font-size: 1rem;
-  font-family: inherit;
+}
+
+.terminal-input:focus, .terminal-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(100, 100, 100, 0.3);
+  border-color: #555;
+}
+
+.terminal-textarea {
+  height: 300px;
   resize: vertical;
 }
 
-.modal-footer {
+.editor-footer {
   padding: 1.5rem;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #333;
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  background: rgba(50, 50, 50, 0.3);
 }
 
-.btn-primary {
-  background: #1976d2;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
+.terminal-btn.primary {
+  background: #444;
+  color: #e0e0e0;
 }
 
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.btn-primary:hover {
-  background: #1565c0;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
+.terminal-btn.primary:hover {
+  background: #555;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .notes-grid {
+  .data-grid {
     grid-template-columns: 1fr;
   }
   
-  .modal-content {
+  .terminal-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .editor-terminal {
     width: 95%;
     margin: 1rem;
   }
   
-  .note-actions {
+  .editor-footer {
     flex-direction: column;
   }
 }
 
 @media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 1.5rem;
+  .terminal-title {
+    font-size: 1.2rem;
   }
   
-  .note-card {
+  .data-card {
     padding: 1rem;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .card-actions {
+    align-self: flex-end;
+  }
+}
+.confirm-terminal {
+  background: linear-gradient(135deg, #1a0f0f 0%, #0a0a0a 100%);
+  border: 2px solid #aa4444;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(170, 68, 68, 0.3);
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #aa4444;
+  background: rgba(170, 68, 68, 0.1);
+  gap: 1rem;
+}
+
+.confirm-header.warning {
+  border-bottom-color: #aa8c3c;
+  background: rgba(170, 140, 60, 0.1);
+}
+
+.confirm-icon {
+  font-size: 1.5rem;
+}
+
+.confirm-title {
+  color: #e0e0e0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.confirm-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.warning-message {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.warning-message h3 {
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.record-info {
+  color: #aa8c3c;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: rgba(170, 140, 60, 0.1);
+  border-radius: 2px;
+  border: 1px solid #aa8c3c;
+}
+
+.warning-text {
+  color: rgba(200, 200, 200, 0.8);
+  line-height: 1.5;
+}
+
+.confirm-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #aa4444;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  background: rgba(170, 68, 68, 0.05);
+}
+
+.confirm-terminal .terminal-btn.danger {
+  background: #aa4444;
+  color: #e0e0e0;
+  border: 1px solid #aa4444;
+}
+
+.confirm-terminal .terminal-btn.danger:hover {
+  background: #bb5555;
+  box-shadow: 0 4px 12px rgba(170, 68, 68, 0.3);
+}
+
+/* 响应式设计调整 */
+@media (max-width: 768px) {
+  .confirm-terminal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .confirm-footer {
+    flex-direction: column;
   }
 }
 </style>

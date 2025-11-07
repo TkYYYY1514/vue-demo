@@ -1,36 +1,51 @@
 <template>
   <div id="app">
     <div class="app-container">
-      <!-- 响应式导航栏 -->
+      <!-- 机械风导航栏 -->
       <nav class="sidebar" :class="{ 'mobile-hidden': isMobileMenuClosed }">
         <div class="logo">
-          <h1>📝 我的笔记</h1>
+          <div class="logo-icon">⚙️</div>
+          <h1>数据终端</h1>
           <button class="mobile-close" @click="toggleMobileMenu">×</button>
         </div>
+        
         <ul class="nav-menu">
           <li>
             <router-link to="/" class="nav-link" @click="closeMobileMenu">
-              <span class="icon">📋</span>
-              <span class="text">所有笔记</span>
+              <span class="icon">📁</span>
+              <span class="text">数据档案</span>
+              <span class="status-indicator"></span>
             </router-link>
           </li>
           <li>
             <router-link to="/favorites" class="nav-link" @click="closeMobileMenu">
-              <span class="icon">⭐</span>
-              <span class="text">收藏夹</span>
+              <span class="icon">🔰</span>
+              <span class="text">核心标记</span>
+              <span class="status-indicator"></span>
             </router-link>
           </li>
           <li>
             <button class="nav-link new-note-btn" @click="createNewNote">
-              <span class="icon">➕</span>
-              <span class="text">新建笔记</span>
+              <span class="icon">🛠️</span>
+              <span class="text">新建记录</span>
+              <span class="pulse-dot"></span>
             </button>
           </li>
         </ul>
         
-        <div class="storage-info">
-          <p>数据自动保存到本地</p>
-          <small>同一浏览器可用</small>
+        <div class="system-info">
+          <div class="info-item">
+            <span class="label">存储状态:</span>
+            <span class="value">LOCAL_ACTIVE</span>
+          </div>
+          <div class="info-item">
+            <span class="label">数据条数:</span>
+            <span class="value">{{ notes.length }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">系统版本:</span>
+            <span class="value">v2.3.7</span>
+          </div>
         </div>
       </nav>
 
@@ -56,7 +71,6 @@ export default {
   },
   mounted() {
     this.loadNotes()
-    // 监听窗口大小变化
     window.addEventListener('resize', this.handleResize)
     this.handleResize()
   },
@@ -66,8 +80,8 @@ export default {
       this.notes = saved ? JSON.parse(saved) : [
         {
           id: 1,
-          title: '欢迎使用笔记应用',
-          content: '这是一个可以在不同设备间保存数据的笔记应用！\n\n功能：\n✅ 自动保存到本地存储\n✅ 响应式设计\n✅ 无需登录\n✅ 多设备支持（同一浏览器）',
+          title: '系统初始化记录',
+          content: '数据终端已启动\n\n系统功能：\n✅ 本地数据存储\n✅ 加密数据保护\n✅ 多设备同步\n✅ 快速检索系统',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           favorite: false
@@ -80,8 +94,8 @@ export default {
     createNewNote() {
       const newNote = {
         id: Date.now(),
-        title: '新笔记',
-        content: '开始记录你的想法...',
+        title: '新数据记录',
+        content: '记录开始...',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         favorite: false
@@ -132,41 +146,71 @@ export default {
 }
 
 body {
-  font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
-  color: #333;
+  font-family: 'Courier New', 'SF Mono', Monaco, Inconsolata, monospace;
+  background: #0a0a0a;
+  color: #e0e0e0; /* 改为浅灰色，减少绿色 */
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* 扫描线效果 - 改为更暗的颜色 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(100, 255, 100, 0.02) 50% /* 更暗的绿色 */
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 .app-container {
   display: flex;
   min-height: 100vh;
+  background: #0a0a0a;
 }
 
-/* 侧边栏样式 */
+/* 侧边栏样式 - 减少绿色 */
 .sidebar {
-  width: 280px;
-  background: white;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  width: 300px;
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%); /* 更深的背景 */
+  border-right: 1px solid #333; /* 改为深灰色边框 */
   position: fixed;
   height: 100vh;
   left: 0;
   top: 0;
   z-index: 1000;
   transition: transform 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* 移除绿色发光 */
 }
 
 .logo {
   padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
-  text-align: center;
+  border-bottom: 1px solid #333; /* 深灰色边框 */
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  color: #e0e0e0; /* 改为灰色 */
 }
 
 .logo h1 {
-  font-size: 1.3rem;
-  color: #2c3e50;
+  font-size: 1.2rem;
+  color: #e0e0e0; /* 改为灰色 */
   font-weight: 600;
+  text-shadow: none; /* 移除绿色发光 */
+  letter-spacing: 1px;
 }
 
 .mobile-close {
@@ -176,79 +220,146 @@ body {
   top: 50%;
   transform: translateY(-50%);
   background: none;
-  border: none;
+  border: 1px solid #555;
+  color: #e0e0e0;
   font-size: 1.5rem;
   cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 2px;
 }
 
 .nav-menu {
   list-style: none;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
 }
 
 .nav-menu li {
   margin: 0.5rem 0;
+  position: relative;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 0.8rem 1.5rem;
-  color: #495057;
+  padding: 1rem 1.5rem;
+  color: #e0e0e0; /* 改为灰色 */
   text-decoration: none;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
-  background: none;
+  background: transparent;
   border: none;
   width: 100%;
   text-align: left;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, transparent, rgba(100, 255, 100, 0.05), transparent); /* 更暗的绿色 */
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::before {
+  width: 100%;
 }
 
 .nav-link:hover {
-  background-color: #f8f9fa;
-  color: #2c3e50;
-  border-left-color: #dee2e6;
+  background: rgba(100, 255, 100, 0.03); /* 更暗的绿色 */
+  color: #e0e0e0;
+  border-left-color: #555; /* 深灰色 */
 }
 
 .nav-link.router-link-active {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border-left-color: #1976d2;
-  font-weight: 500;
+  background: rgba(100, 255, 100, 0.05); /* 更暗的绿色 */
+  color: #e0e0e0;
+  border-left-color: #666; /* 中灰色 */
+  font-weight: 600;
+  text-shadow: none; /* 移除发光 */
 }
 
 .nav-link .icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-right: 0.8rem;
   width: 20px;
   text-align: center;
+  color: #e0e0e0; /* 改为灰色 */
 }
 
 .nav-link .text {
   font-size: 0.95rem;
+  flex: 1;
+}
+
+.status-indicator {
+  width: 6px;
+  height: 6px;
+  background: #666; /* 改为灰色 */
+  border-radius: 50%;
+  box-shadow: 0 0 4px #666; /* 灰色发光 */
+  animation: pulse 2s infinite;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #888; /* 改为灰色 */
+  border-radius: 50%;
+  box-shadow: 0 0 4px #888; /* 灰色发光 */
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 .new-note-btn {
-  background: #1976d2 !important;
-  color: white !important;
-  border-left-color: #1976d2 !important;
+  background: linear-gradient(135deg, #333 0%, #222 100%) !important; /* 灰色渐变 */
+  color: #e0e0e0 !important;
+  border-left-color: #555 !important;
+  font-weight: 600;
 }
 
 .new-note-btn:hover {
-  background: #1565c0 !important;
+  background: linear-gradient(135deg, #444 0%, #333 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* 黑色阴影 */
 }
 
-.storage-info {
-  padding: 1rem;
-  border-top: 1px solid #e9ecef;
-  text-align: center;
-  color: #6c757d;
-  font-size: 0.9rem;
+.system-info {
+  padding: 1.5rem;
+  border-top: 1px solid #333; /* 深灰色 */
+  background: rgba(50, 50, 50, 0.3); /* 深灰色背景 */
 }
 
-.storage-info small {
-  color: #adb5bd;
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  color: #aaa; /* 浅灰色 */
+  opacity: 0.8;
+}
+
+.value {
+  color: #e0e0e0; /* 浅灰色 */
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
 }
 
 /* 移动端菜单按钮 */
@@ -258,28 +369,31 @@ body {
   top: 1rem;
   left: 1rem;
   z-index: 1001;
-  background: #1976d2;
-  color: white;
+  background: #333;
+  color: #e0e0e0;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   padding: 0.5rem 0.8rem;
   font-size: 1.2rem;
   cursor: pointer;
+  font-weight: bold;
 }
 
 /* 主内容区样式 */
 .main-content {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 300px;
   padding: 2rem;
-  background-color: #f8f9fa;
+  background: #0a0a0a;
   min-height: 100vh;
+  position: relative;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    width: 280px;
   }
   
   .sidebar.mobile-hidden {

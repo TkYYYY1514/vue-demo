@@ -1,44 +1,25 @@
-# tushu
+# 数据终端 - Data Terminal
 
-This template should help get you started developing with Vue 3 in Vite.
+> 一个专业的本地数据管理系统，采用机械风格界面设计
 
-## Recommended IDE Setup
+## ✨ 功能特性
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- 🗂️ **数据档案管理** - 完整的CRUD操作
+- ⭐ **核心标记系统** - 重要数据标记
+- 🔍 **智能检索** - 快速定位数据记录
+- 💾 **本地存储** - 数据自动保存到浏览器
+- 🎨 **机械风格界面** - 专业的终端视觉设计
+- 📱 **响应式设计** - 支持多设备访问
 
-## Recommended Browser Setup
+## 🛠️ 技术栈
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- Vue 3 + Composition API
+- Vue Router 4
+- Vite 5
+- 原生 CSS3
 
-## Customize configuration
+## 🚀 快速开始
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+### 安装依赖
+```bash
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
